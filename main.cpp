@@ -149,6 +149,11 @@ int main()
 			sideBranch[i] = Side::NONE;
 			break;
 		}
+		if (sideBranch[NUM_BRANCHES - 1] == sidePlayer)
+		{
+			sideBranch[NUM_BRANCHES - 1] = Side::NONE;
+		}
+			
 	}
 
 
@@ -157,7 +162,8 @@ int main()
 
 	bool isLeft = false; //키 입력 확인
 	bool isRight = false;
-
+	bool crash = true;
+	bool retry = true;
 	while (window.isOpen()) //윈도우 창에 띄우기
 	{
 		sf::Time time = clock.restart();
@@ -195,6 +201,10 @@ int main()
 					}
 					isRight = true;
 					break;
+				case sf::Keyboard::Enter:
+					crash = true;
+					retry = true;
+					break;
 				}
 				break;
 
@@ -210,177 +220,192 @@ int main()
 					isRightUp = true;
 					break;
 				}
-				break;
 			}
 		}
-
 
 		// 업데이트
-		if (isRightDown || isLeftDown)
+		if (crash ==true)
 		{
-			if (isLeftDown)
+			if (retry == true)
 			{
-				sidePlayer = Side::LEFT;
-				sideAxe = Side::LEFT;
+				updateBranches(sideBranch, NUM_BRANCHES);
+				updateBranches(sideBranch, NUM_BRANCHES);
+				updateBranches(sideBranch, NUM_BRANCHES);
+				updateBranches(sideBranch, NUM_BRANCHES);
+				updateBranches(sideBranch, NUM_BRANCHES);
+				sideBranch[NUM_BRANCHES - 1] = Side::NONE;
+				retry = false;
 			}
-			if (isRightDown)
-			{
-				sidePlayer = Side::RIGHT;
-				sideAxe = Side::RIGHT;
-			}
-			updateBranches(sideBranch, NUM_BRANCHES);
-			if (sidePlayer == sideBranch[NUM_BRANCHES - 1])
-			{
-				printf("충돌\n");
-			}
-		}
-		if (isRightUp || isLeftUp)
-		{
-			if (isRightUp)
-			{
-				sideAxe = Side::NONE;
-			}
-			if (isLeftUp)
-			{
-				sideAxe = Side::NONE;
-			}
-		}
-		
 
-
-
-		sf::Vector2f elmentPosition[4];
-		for (int i = 0; i < 4; i++)
-		{
-			elmentPosition[i] = spriteElement[i].getPosition();
-			elmentPosition[i] += elementDir[i] * elementSpeed[i] * deltaTime;
-			spriteElement[i].setPosition(elmentPosition[i]);
-			if (i < cloudCount)
-			{
-				if (elmentPosition[i].x < -350 || elmentPosition[i].x>1920 + 350)
+				if (isRightDown || isLeftDown)
 				{
-					float random = float(rand()) / RAND_MAX;
-					if (random < 0.5f)
+					if (isLeftDown)
 					{
-						elementDir[i] = { 1.f,0.f };
-						spriteElement[i].setScale(-1.f, 1.f);
-						spriteElement[i].setPosition(0 - 300, (float)(rand() % 250) * (i + 1));
+						sidePlayer = Side::LEFT;
+						sideAxe = Side::LEFT;
 					}
-					else
+					if (isRightDown)
 					{
-						elementDir[i] = { -1.f,0.f };
-						spriteElement[i].setScale(1.f, 1.f);
-						spriteElement[i].setPosition(1920 + 300, (float)(rand() % 250) * (i + 1));
+						sidePlayer = Side::RIGHT;
+						sideAxe = Side::RIGHT;
+					}
+					updateBranches(sideBranch, NUM_BRANCHES);
+					if (sidePlayer == sideBranch[NUM_BRANCHES - 1])
+					{
+						printf("충돌했습니다! 게임 오버!\n");
+						crash = false;
 					}
 				}
-			}
-			else
+			
+
+			if (isRightUp || isLeftUp)
 			{
-				if (elmentPosition[i].x < -100 || elmentPosition[i].x>1920 + 100)
+				if (isRightUp)
 				{
-					float random = float(rand()) / RAND_MAX;
-					if (random < 0.5f)
+					sideAxe = Side::NONE;
+				}
+				if (isLeftUp)
+				{
+					sideAxe = Side::NONE;
+				}
+			}
+
+
+
+
+			sf::Vector2f elmentPosition[4];
+			for (int i = 0; i < 4; i++)
+			{
+				elmentPosition[i] = spriteElement[i].getPosition();
+				elmentPosition[i] += elementDir[i] * elementSpeed[i] * deltaTime;
+				spriteElement[i].setPosition(elmentPosition[i]);
+				if (i < cloudCount)
+				{
+					if (elmentPosition[i].x < -350 || elmentPosition[i].x>1920 + 350)
 					{
-						elementDir[i] = { 1.f,0.f };
-						spriteElement[i].setScale(-1.f, 1.f);
-						spriteElement[i].setPosition(0 - 60, (float)(rand() % 800) * (i + 1));
-					}
-					else
-					{
-						elementDir[i] = { -1.f,0.f };
-						spriteElement[i].setScale(1.f, 1.f);
-						spriteElement[i].setPosition(1920 + 60, (float)(rand() % 800) * (i + 1));
+						float random = float(rand()) / RAND_MAX;
+						if (random < 0.5f)
+						{
+							elementDir[i] = { 1.f,0.f };
+							spriteElement[i].setScale(-1.f, 1.f);
+							spriteElement[i].setPosition(0 - 300, (float)(rand() % 250) * (i + 1));
+						}
+						else
+						{
+							elementDir[i] = { -1.f,0.f };
+							spriteElement[i].setScale(1.f, 1.f);
+							spriteElement[i].setPosition(1920 + 300, (float)(rand() % 250) * (i + 1));
+						}
 					}
 				}
+				else
+				{
+					if (elmentPosition[i].x < -100 || elmentPosition[i].x>1920 + 100)
+					{
+						float random = float(rand()) / RAND_MAX;
+						if (random < 0.5f)
+						{
+							elementDir[i] = { 1.f,0.f };
+							spriteElement[i].setScale(-1.f, 1.f);
+							spriteElement[i].setPosition(0 - 60, (float)(rand() % 800) * (i + 1));
+						}
+						else
+						{
+							elementDir[i] = { -1.f,0.f };
+							spriteElement[i].setScale(1.f, 1.f);
+							spriteElement[i].setPosition(1920 + 60, (float)(rand() % 800) * (i + 1));
+						}
+					}
 
+				}
 			}
-		}
 
 
-		for (int i = 0; i < NUM_BRANCHES; i++)
-		{
-			switch (sideBranch[i])
+			for (int i = 0; i < NUM_BRANCHES; i++)
+			{
+				switch (sideBranch[i])
+				{
+				case Side::LEFT:
+					spriteBranch[i].setScale(-1.f, 1.f);
+					break;
+				case Side::RIGHT:
+					spriteBranch[i].setScale(1.f, 1.f);
+					break;
+				}
+			}
+
+
+			switch (sidePlayer)
 			{
 			case Side::LEFT:
-				spriteBranch[i].setScale(-1.f, 1.f);
-				break;
-			case Side::RIGHT:
-				spriteBranch[i].setScale(1.f, 1.f);
-				break;
-			}
-		}
-
-
-		switch (sidePlayer)
-		{
-		case Side::LEFT:
-		{
-			spritePlayer.setScale(-1.f, 1.f);
-			spritePlayer.setPosition(spriteTree.getPosition().x - 400.f, 900.f);
-			break;
-		}
-		case Side::RIGHT:
-		{
-			spritePlayer.setScale(1.f, 1.f);
-			spritePlayer.setPosition(spriteTree.getPosition().x + 400.f, 900.f);
-			break;
-		}
-		}
-
-		switch (sideAxe)
-		{
-		case Side::LEFT:
-		{
-			spriteAxe.setScale(-1.f, 1.f);
-			spriteAxe.setPosition(spritePlayer.getPosition().x+120 , 1000.f);
-			break;
-		}
-		case Side::RIGHT:
-		{
-			spriteAxe.setScale(1.f, 1.f);
-			spriteAxe.setPosition(spritePlayer.getPosition().x-120 , 1000.f);
-			break;
-		}
-		}
-
-
-
-
-		//그리기
-		window.clear();
-		window.draw(spriteBackground);
-
-		for (int i = 0; i < 3; i++)
-		{
-			window.draw(spriteElement[i]);
-		}
-
-		window.draw(spriteTree);
-
-		for (int i = 0; i < NUM_BRANCHES; i++)
-		{
-			if (sideBranch[i] != Side::NONE)
 			{
-				window.draw(spriteBranch[i]);
+				spritePlayer.setScale(-1.f, 1.f);
+				spritePlayer.setPosition(spriteTree.getPosition().x - 400.f, 900.f);
+				break;
 			}
+			case Side::RIGHT:
+			{
+				spritePlayer.setScale(1.f, 1.f);
+				spritePlayer.setPosition(spriteTree.getPosition().x + 400.f, 900.f);
+				break;
+			}
+			}
+
+			switch (sideAxe)
+			{
+			case Side::LEFT:
+			{
+				spriteAxe.setScale(-1.f, 1.f);
+				spriteAxe.setPosition(spritePlayer.getPosition().x + 120, 1000.f);
+				break;
+			}
+			case Side::RIGHT:
+			{
+				spriteAxe.setScale(1.f, 1.f);
+				spriteAxe.setPosition(spritePlayer.getPosition().x - 120, 1000.f);
+				break;
+			}
+			}
+
+
+
+
+			//그리기
+			window.clear();
+			window.draw(spriteBackground);
+
+			for (int i = 0; i < 3; i++)
+			{
+				window.draw(spriteElement[i]);
+			}
+
+			window.draw(spriteTree);
+
+			for (int i = 0; i < NUM_BRANCHES; i++)
+			{
+				if (sideBranch[i] != Side::NONE)
+				{
+					window.draw(spriteBranch[i]);
+				}
+			}
+
+			for (int i = 3; i < 4; i++)
+			{
+				window.draw(spriteElement[i]);
+			}
+
+			window.draw(spritePlayer);
+
+			if (sideAxe != Side::NONE)
+			{
+				window.draw(spriteAxe);
+			}
+
+
+			window.display();
+
 		}
-
-		for (int i = 3; i < 4; i++)
-		{
-			window.draw(spriteElement[i]);
-		}
-
-		window.draw(spritePlayer);
-
-		if (sideAxe != Side::NONE)
-		{
-			window.draw(spriteAxe);
-		}
-		
-
-		window.display();
 
 	}
-
 	return 0;
 }
