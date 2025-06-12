@@ -2,8 +2,12 @@
 #include <ctime> // 
 #include <cstdlib> // srand rand
 
+enum class Side {LEFT,RIGHT,NONE};
+
 int main()
 {
+
+
     srand((int)time(0));
     sf::RenderWindow window(sf::VideoMode(1920, 1080), "Timber!");
 
@@ -21,6 +25,12 @@ int main()
     sf::Texture textureBee;
     textureBee.loadFromFile("graphics/bee.png");
 
+    sf::Texture texturePlayer;
+    texturePlayer.loadFromFile("graphics/player.png");
+
+    sf::Texture textureBranch;
+    textureBranch.loadFromFile("graphics/Branch.png");
+
 
     //그림 위치 출력하기
 
@@ -33,54 +43,68 @@ int main()
     spriteTree.setOrigin(textureTree.getSize().x * 0.5f, 0.f);
     spriteTree.setPosition(1920 * 0.5f, 0.f);
 
+    sf::Sprite spriteElement[4];
+    sf::Vector2f elementDir[4];
+    float elementSpeed[4];
+    int cloudCount = 3;
+    for (int i = 0; i < 4; i++)
+    {
+        {
+            if (i < cloudCount)
+            {
+                spriteElement[i].setTexture(textureCloud);
+                spriteElement[i].setPosition((float)(rand() % 1200), (float)(rand() % 250) * (i + 1));
+                elementSpeed[i] = rand() / 100 + 100;
+                float random = float(rand()) / RAND_MAX;
+                if (random < 0.5f)
+                    {
+                        elementDir[i] = { 1.f,0.f };
+                        spriteElement[i].setScale(-1.f, 1.f);
+                    }
+                else
+                    {
+                        elementDir[i] = { -1.f,0.f };
+                        spriteElement[i].setScale(1.f, 1.f);
+                    }
+            }
+            else
+            {     
+                spriteElement[i].setTexture(textureBee);
+                spriteElement[i].setPosition((float)(rand() % 1200), (float)(rand() % 800) * (i + 1));
+                elementSpeed[i] = rand() / 100 + 100; \
+                float random = float(rand()) / RAND_MAX;
+                if (random < 0.5f)
+                    {
+                        elementDir[i] = { 1.f,0.f };
+                        spriteElement[i].setScale(-1.f, 1.f);
+                    }
+                else
+                    {
+                        elementDir[i] = { -1.f,0.f };
+                        spriteElement[i].setScale(1.f, 1.f);
+                    }
+            }
+        }
+    }
 
-    sf::Sprite spriteCloud[3];
-    for (int i = 0; i < 3; i++)
+    sf::Sprite spritePlayer;
+    spritePlayer.setTexture(texturePlayer);
+    spritePlayer.setOrigin(textureTree.getSize().x*0.5f, texturePlayer.getSize().y);
+    Side sidePlayer = Side::LEFT;
+
+
+
+    const int NUM_BRANCHES = 6;
+    sf::Sprite spriteBranch[NUM_BRANCHES];
+    Side sideBranch[NUM_BRANCHES] = { Side::LEFT,Side::RIGHT,Side::NONE,
+        Side::LEFT,Side::RIGHT,Side::NONE };
+    for (int i = 0; i < NUM_BRANCHES; i++)
     {
-        spriteCloud[i].setTexture(textureCloud);
-        spriteCloud[i].setPosition((float)(rand() % 1200), (float)(rand() % 250)* (i + 1));
-    }
-    sf::Vector2f cloudDir[3];
-    float cloudSpeed[3];
-    for (int i = 0; i < 3; i++)
-    {
-        cloudSpeed[i] = rand() / 100 + 100;\
-        float random = float(rand()) / RAND_MAX;
-        if (random < 0.5f)
-        {
-            cloudDir[i] = { 1.f,0.f };
-            spriteCloud[i].setScale(-1.f, 1.f);
-        }
-        else
-        {
-            cloudDir[i] = { -1.f,0.f };
-            spriteCloud[i].setScale(1.f, 1.f);
-        }
+        spriteBranch[i].setTexture(textureBranch);
+        spriteBranch[i].setOrigin(textureTree.getSize().x*-0.5f, 0.f);
+        spriteBranch[i].setPosition(1920*0.5f, i*150.f);
     }
 
-    sf::Sprite spriteBee[2];
-    for (int i = 0; i < 2; i++)
-    {
-        spriteBee[i].setTexture(textureBee);
-        spriteBee[i].setPosition((float)(rand() % 1200), (float)(rand() % 800) * (i + 1));
-    }
-    sf::Vector2f BeeDir[2];
-    float BeeSpeed[2];
-    for (int i = 0; i < 2; i++)
-    {
-        BeeSpeed[i] = rand() / 100 + 100; \
-        float random = float(rand()) / RAND_MAX;
-        if (random < 0.5f)
-        {
-            BeeDir[i] = { 1.f,0.f };
-            spriteBee[i].setScale(-1.f, 1.f);
-        }
-        else
-        {
-            BeeDir[i] = { -1.f,0.f };
-            spriteBee[i].setScale(1.f, 1.f);
-        }
-    }
 
     sf::Clock clock; //스탑워치
 
@@ -100,70 +124,118 @@ int main()
         }
 
         // 업데이트
-        sf::Vector2f cloudPosition[3];
-        for (int i = 0; i < 3; i++)
+        sf::Vector2f elmentPosition[4];
+        for (int i = 0; i < 4; i++)
         {
-            cloudPosition[i] = spriteCloud[i].getPosition();
-            cloudPosition[i] += cloudDir[i] * cloudSpeed[i] * deltaTime;
-            spriteCloud[i].setPosition(cloudPosition[i]);
+            elmentPosition[i] = spriteElement[i].getPosition();
+            elmentPosition[i] += elementDir[i] * elementSpeed[i] * deltaTime;
+            spriteElement[i].setPosition(elmentPosition[i]);
+            if (i < cloudCount)
+            {
+                if (elmentPosition[i].x < -350 || elmentPosition[i].x>1920 + 350)
+                {
+                    float random = float(rand()) / RAND_MAX;
+                    if (random < 0.5f)
+                    {
+                        elementDir[i] = { 1.f,0.f };
+                        spriteElement[i].setScale(-1.f, 1.f);
+                        spriteElement[i].setPosition(0 - 300, (float)(rand() % 250) * (i + 1));
+                    }
+                    else
+                    {
+                        elementDir[i] = { -1.f,0.f };
+                        spriteElement[i].setScale(1.f, 1.f);
+                        spriteElement[i].setPosition(1920 + 300, (float)(rand() % 250) * (i + 1));
+                    }
+                }
+            }
+            else
+            {
+                if (elmentPosition[i].x < -100 || elmentPosition[i].x>1920 + 100)
+                {
+                    float random = float(rand()) / RAND_MAX;
+                    if (random < 0.5f)
+                    {
+                        elementDir[i] = { 1.f,0.f };
+                        spriteElement[i].setScale(-1.f, 1.f);
+                        spriteElement[i].setPosition(0 - 60, (float)(rand() % 800) * (i + 1));
+                    }
+                    else
+                    {
+                        elementDir[i] = { -1.f,0.f };
+                        spriteElement[i].setScale(1.f, 1.f);
+                        spriteElement[i].setPosition(1920 + 60, (float)(rand() % 800) * (i + 1));
+                    }
+                }
+
+            }
+        }
+
+
+        for (int i = 0; i < NUM_BRANCHES; i++)
+        {
+            switch (sideBranch[i])
+            {
+                 case Side::LEFT:
+                 {
+                     spriteBranch[i].setScale(1.f, 1.f);
+                     break;
+                 }
+                 case Side::RIGHT:
+                 {
+                     spriteBranch[i].setScale(-1.f, 1.f);
+                     break;
+                 }
+            }
+        }
+
+        switch(sidePlayer)
+        {
+            case Side::LEFT:
+            {
+                spritePlayer.setScale(-1.f, 1.f);
+                spritePlayer.setPosition(1920 * 0.3f, 900.f);
+                break;
+            }
+            case Side::RIGHT:
+            {
+                spritePlayer.setScale(1.f, 1.f);
+                spritePlayer.setPosition(1920 * 0.7f, 900.f);
+                break;
+            }
+        }
         
-            if (cloudPosition[i].x < -350 || cloudPosition[i].x>1920 + 350)
-            {
-                float random = float(rand()) / RAND_MAX;
-                if (random < 0.5f)
-                {
-                    cloudDir[i] = { 1.f,0.f };
-                    spriteCloud[i].setScale(-1.f, 1.f);
-                    spriteCloud[i].setPosition(0-300, (float)(rand() % 250) * (i + 1));
-                }
-                else
-                {
-                    cloudDir[i] = { -1.f,0.f };
-                    spriteCloud[i].setScale(1.f, 1.f);
-                    spriteCloud[i].setPosition(1920 + 300, (float)(rand() % 250) * (i + 1));
-                }
-            }
-        }
 
-        sf::Vector2f BeePosition[2];
-        for (int i = 0; i < 2; i++)
-        {
-            BeePosition[i] = spriteBee[i].getPosition();
-            BeePosition[i] += BeeDir[i] * BeeSpeed[i] * deltaTime;
-            spriteBee[i].setPosition(BeePosition[i]);
-
-            if (BeePosition[i].x < -100 || BeePosition[i].x>1920 + 100)
-            {
-                float random = float(rand()) / RAND_MAX;
-                if (random < 0.5f)
-                {
-                    BeeDir[i] = { 1.f,0.f };
-                    spriteBee[i].setScale(-1.f, 1.f);
-                    spriteBee[i].setPosition(0 - 60, (float)(rand() % 800)* (i+1));
-                }
-                else
-                {
-                    BeeDir[i] = { -1.f,0.f };
-                    spriteBee[i].setScale(1.f, 1.f);
-                    spriteBee[i].setPosition(1920 + 60, (float)(rand() % 800) * (i + 1));
-                }
-            }
-        }
-
+        
 
         //그리기
         window.clear();
         window.draw(spriteBackground);
+
         for (int i = 0; i < 3; i++)
         {
-            window.draw(spriteCloud[i]);
+            window.draw(spriteElement[i]);
         }
+
         window.draw(spriteTree);
-        for (int i = 0; i < 2; i++)
+
+        for (int i = 0; i < NUM_BRANCHES; i++)
         {
-            window.draw(spriteBee[i]);
+            if (sideBranch[i] != Side::NONE)
+            {
+                window.draw(spriteBranch[i]);
+            }
         }
+
+        for (int i = 3; i < 4; i++)
+        {
+            window.draw(spriteElement[i]);
+        }
+
+        window.draw(spritePlayer);
+  
         window.display();
+       
     }
 
     return 0;
