@@ -170,10 +170,13 @@ int main()
 
 	sf::Text textStart;
 	textStart.setFont(font);
-	textStart.setString("Press Enter to start!");
+	textStart.setString("");
 	textStart.setCharacterSize(100);
 	textStart.setFillColor(sf::Color::Yellow);
 	textStart.setPosition(1920*0.2f, 1080*0.4f);
+	sf::Vector2f textStartOrigin;
+	textStartOrigin.x = textStart.getLocalBounds().width * 0.5f;
+
 
 	sf::Text textRestart;
 	textRestart.setFont(font);
@@ -192,7 +195,6 @@ int main()
 	sf::RectangleShape timeBar;
 	float timeBarWidth = 400;
 	float timeBarHeight = 80;
-	float timeBonus = timeBarWidth / 10.f;
 	timeBar.setSize({ timeBarWidth, timeBarHeight });
 	timeBar.setFillColor(sf::Color::Red);
 	timeBar.setPosition(1920 * 0.5f - timeBarWidth * 0.5f, 1080.f - 100.f);
@@ -209,8 +211,7 @@ int main()
 	bool isLeft = false; //키 입력 확인
 	bool isRight = false;
 	bool crash = true;
-	bool retry = true;
-
+	bool retry = false;
 	while (window.isOpen()) //윈도우 창에 띄우기
 	{
 		sf::Time time = clock.restart();
@@ -252,18 +253,35 @@ int main()
 					isRight = true;
 					break;
 				case sf::Keyboard::Enter:
-					score = 0;
-					textScore.setString("SCORE: " + std::to_string(score));
 					textStart.setString("");
-					textRestart.setString("");
-					textStop.setString("");
-					timeBar.setSize({ timeBarWidth, timeBarHeight });
-					remaingTime = 5.f;
+					if (crash==true)
+					{
+						textRestart.setString("");
+						textStop.setString("");
+					}
+					else
+					{
+						if (remaingTime == 0.f || sidePlayer == sideBranch[NUM_BRANCHES - 1])
+						{
+							score = 0;
+							textScore.setString("SCORE: " + std::to_string(score));
+							remaingTime = 5.f;
+							timeBar.setSize({ timeBarWidth, timeBarHeight });
+							updateBranches(sideBranch, NUM_BRANCHES);
+							updateBranches(sideBranch, NUM_BRANCHES);
+							updateBranches(sideBranch, NUM_BRANCHES);
+							updateBranches(sideBranch, NUM_BRANCHES);
+							updateBranches(sideBranch, NUM_BRANCHES);
+							updateBranches(sideBranch, NUM_BRANCHES);
+							sideBranch[NUM_BRANCHES - 1] = Side::NONE;
+						}
+					}
 					crash = true;
 					retry = true;
 					break;
 				case sf::Keyboard::Escape:
 					textStop.setString("Press Enter to resume!");
+					textRestart.setString("");
 					crash = false;
 					break;
 				}
@@ -284,35 +302,29 @@ int main()
 			}
 		}
 
+	
 		
 	
 
 
 		// 업데이트
-		if (crash == true)
-		{
-			if (retry == true)
+		if (crash==true)
+		{	
+			if (retry == false)
 			{
-				updateBranches(sideBranch, NUM_BRANCHES);
-				updateBranches(sideBranch, NUM_BRANCHES);
-				updateBranches(sideBranch, NUM_BRANCHES);
-				updateBranches(sideBranch, NUM_BRANCHES);
-				updateBranches(sideBranch, NUM_BRANCHES);
-				updateBranches(sideBranch, NUM_BRANCHES);
-				sideBranch[NUM_BRANCHES - 1] = Side::NONE;
-				retry = false;
+				textStart.setString("Press Enter to start!");
+				crash = false;
 			}
-			
-			sf::Vector2f timeBarenerge;
+
 			remaingTime -= deltaTime;
-			timeBarenerge.x = timeBarSpeed * remaingTime;
 			if (remaingTime < 0.f)
 			{
 				remaingTime = 0.f;
+				textRestart.setString("Press Enter to restart");
+				textStop.setString("");
 				crash = false;
 			}
-			timeBar.setSize({ timeBarenerge.x,timeBarHeight });
-
+			timeBar.setSize({ timeBarSpeed * remaingTime,timeBarHeight });
 
 			if (isRightDown || isLeftDown)
 			{
@@ -330,12 +342,13 @@ int main()
 				if (sidePlayer == sideBranch[NUM_BRANCHES - 1])
 				{
 					textRestart.setString("Press Enter to restart");
-					crash = false;
+					textStop.setString("");
+					crash=false;
 				}
 				else
 				{
 					score += 10;
-					timeBarenerge.x += 80;
+					remaingTime += 0.2;
 					textScore.setString("SCORE: " + std::to_string(score));
 				}
 			}
@@ -484,9 +497,15 @@ int main()
 
 			window.draw(textStart);
 
-			window.draw(textRestart);
+			if (crash==false)
+			{
+
+				window.draw(textRestart);
+
+				window.draw(textStop);
+			}
 			
-			window.draw(textStop);
+		
 
 			window.draw(timeBar);
 
