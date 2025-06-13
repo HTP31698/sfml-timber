@@ -58,6 +58,10 @@ int main()
 	sf::Texture textureAxe;
 	textureAxe.loadFromFile("graphics/axe.png");
 
+	//폰트 불러오기
+
+	sf::Font font;
+	font.loadFromFile("fonts/KOMIKAP_.ttf");
 
 	//그림 위치 출력하기
 
@@ -153,17 +157,60 @@ int main()
 		{
 			sideBranch[NUM_BRANCHES - 1] = Side::NONE;
 		}
-			
+
 	}
 
+	//UI
+	sf::Text textScore;
+	textScore.setFont(font);
+	textScore.setString("SCORE: 0");
+	textScore.setCharacterSize(70);
+	textScore.setFillColor(sf::Color::Cyan);
+	textScore.setPosition(20,20);
 
-	sf::Clock clock; //스탑워치
+	sf::Text textStart;
+	textStart.setFont(font);
+	textStart.setString("Press Enter to start!");
+	textStart.setCharacterSize(100);
+	textStart.setFillColor(sf::Color::Yellow);
+	textStart.setPosition(1920*0.2f, 1080*0.4f);
+
+	sf::Text textRestart;
+	textRestart.setFont(font);
+	textRestart.setString("");
+	textRestart.setCharacterSize(100);
+	textRestart.setFillColor(sf::Color::Yellow);
+	textRestart.setPosition(1920 * 0.2f, 1080 * 0.4f);
+
+	sf::Text textStop;
+	textStop.setFont(font);
+	textStop.setString("");
+	textStop.setCharacterSize(100);
+	textStop.setFillColor(sf::Color::Yellow);
+	textStop.setPosition(1920 * 0.2f, 1080 * 0.4f);
+
+	sf::RectangleShape timeBar;
+	float timeBarWidth = 400;
+	float timeBarHeight = 80;
+	float timeBonus = timeBarWidth / 10.f;
+	timeBar.setSize({ timeBarWidth, timeBarHeight });
+	timeBar.setFillColor(sf::Color::Red);
+	timeBar.setPosition(1920 * 0.5f - timeBarWidth * 0.5f, 1080.f - 100.f);
+
+	// 변수들
+	int score = 0;
+	float remaingTime = 5.f;
+	float timeBarSpeed = timeBarWidth / 5.f;
+
+	//스탑워치
+	sf::Clock clock;
 
 
 	bool isLeft = false; //키 입력 확인
 	bool isRight = false;
 	bool crash = true;
 	bool retry = true;
+
 	while (window.isOpen()) //윈도우 창에 띄우기
 	{
 		sf::Time time = clock.restart();
@@ -176,6 +223,9 @@ int main()
 		bool isRightDown = false;
 		bool isLeftUp = false;
 		bool isRightUp = false;
+
+		//메인 루프
+
 		while (window.pollEvent(event))
 		{
 			switch (event.type)
@@ -202,8 +252,19 @@ int main()
 					isRight = true;
 					break;
 				case sf::Keyboard::Enter:
+					score = 0;
+					textScore.setString("SCORE: " + std::to_string(score));
+					textStart.setString("");
+					textRestart.setString("");
+					textStop.setString("");
+					timeBar.setSize({ timeBarWidth, timeBarHeight });
+					remaingTime = 5.f;
 					crash = true;
 					retry = true;
+					break;
+				case sf::Keyboard::Escape:
+					textStop.setString("Press Enter to resume!");
+					crash = false;
 					break;
 				}
 				break;
@@ -223,8 +284,12 @@ int main()
 			}
 		}
 
+		
+	
+
+
 		// 업데이트
-		if (crash ==true)
+		if (crash == true)
 		{
 			if (retry == true)
 			{
@@ -233,30 +298,48 @@ int main()
 				updateBranches(sideBranch, NUM_BRANCHES);
 				updateBranches(sideBranch, NUM_BRANCHES);
 				updateBranches(sideBranch, NUM_BRANCHES);
+				updateBranches(sideBranch, NUM_BRANCHES);
 				sideBranch[NUM_BRANCHES - 1] = Side::NONE;
 				retry = false;
 			}
-
-				if (isRightDown || isLeftDown)
-				{
-					if (isLeftDown)
-					{
-						sidePlayer = Side::LEFT;
-						sideAxe = Side::LEFT;
-					}
-					if (isRightDown)
-					{
-						sidePlayer = Side::RIGHT;
-						sideAxe = Side::RIGHT;
-					}
-					updateBranches(sideBranch, NUM_BRANCHES);
-					if (sidePlayer == sideBranch[NUM_BRANCHES - 1])
-					{
-						printf("충돌했습니다! 게임 오버!\n");
-						crash = false;
-					}
-				}
 			
+			sf::Vector2f timeBarenerge;
+			remaingTime -= deltaTime;
+			timeBarenerge.x = timeBarSpeed * remaingTime;
+			if (remaingTime < 0.f)
+			{
+				remaingTime = 0.f;
+				crash = false;
+			}
+			timeBar.setSize({ timeBarenerge.x,timeBarHeight });
+
+
+			if (isRightDown || isLeftDown)
+			{
+				if (isLeftDown)
+				{
+					sidePlayer = Side::LEFT;
+					sideAxe = Side::LEFT;
+				}
+				if (isRightDown)
+				{
+					sidePlayer = Side::RIGHT;
+					sideAxe = Side::RIGHT;
+				}
+				updateBranches(sideBranch, NUM_BRANCHES);
+				if (sidePlayer == sideBranch[NUM_BRANCHES - 1])
+				{
+					textRestart.setString("Press Enter to restart");
+					crash = false;
+				}
+				else
+				{
+					score += 10;
+					timeBarenerge.x += 80;
+					textScore.setString("SCORE: " + std::to_string(score));
+				}
+			}
+
 
 			if (isRightUp || isLeftUp)
 			{
@@ -341,37 +424,32 @@ int main()
 			{
 				spritePlayer.setScale(-1.f, 1.f);
 				spritePlayer.setPosition(spriteTree.getPosition().x - 400.f, 900.f);
-				break;
-			}
-			case Side::RIGHT:
-			{
-				spritePlayer.setScale(1.f, 1.f);
-				spritePlayer.setPosition(spriteTree.getPosition().x + 400.f, 900.f);
-				break;
-			}
-			}
-
-			switch (sideAxe)
-			{
-			case Side::LEFT:
-			{
 				spriteAxe.setScale(-1.f, 1.f);
 				spriteAxe.setPosition(spritePlayer.getPosition().x + 120, 1000.f);
 				break;
 			}
 			case Side::RIGHT:
 			{
+				spritePlayer.setScale(1.f, 1.f);
+				spritePlayer.setPosition(spriteTree.getPosition().x + 400.f, 900.f);
 				spriteAxe.setScale(1.f, 1.f);
 				spriteAxe.setPosition(spritePlayer.getPosition().x - 120, 1000.f);
 				break;
 			}
 			}
+			}
+
+			
 
 
 
 
 			//그리기
 			window.clear();
+			
+			window.draw(textStart);
+
+			//WORLD
 			window.draw(spriteBackground);
 
 			for (int i = 0; i < 3; i++)
@@ -401,11 +479,21 @@ int main()
 				window.draw(spriteAxe);
 			}
 
+			//UI
+			window.draw(textScore);
+
+			window.draw(textStart);
+
+			window.draw(textRestart);
+			
+			window.draw(textStop);
+
+			window.draw(timeBar);
 
 			window.display();
 
 		}
 
-	}
+	
 	return 0;
 }
